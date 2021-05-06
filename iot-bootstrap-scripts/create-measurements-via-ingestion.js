@@ -31,6 +31,7 @@ const config = readFile('default-env.json');
 const deviceconnectivity = config.VCAP_SERVICES.iotae[0].credentials['iot-device-connectivity'];
 //console.log(deviceconnectivity);
 const devices = readFile('devices.json');
+const gateway = readFile('gateway.json');
 const model = readFile('model.json');
 
 var initialData = {}
@@ -83,29 +84,30 @@ function sendDataViaMQTT() {
 }
 
 function connectToMQTT() {
-  let host = deviceconnectivity.mqtt.substr(8,deviceconnectivity.mqtt.length-13);
+  let host = gateway.host;
+  let port = gateway.port;
   //console.log(host);
   let devicenumber = 0;
   for (let device of devices) {
     let deviceAlternateId = device.id;
-    let certificateFile = 'certificates/' + deviceAlternateId + '-device_certificate.pem';
-    let passphraseFile = 'certificates/' + deviceAlternateId + '-device_passphrase.txt';
+    //let certificateFile = 'certificates/' + deviceAlternateId + '-device_certificate.pem';
+    //let passphraseFile = 'certificates/' + deviceAlternateId + '-device_passphrase.txt';
     var options = {
         keepalive: 10,
         clientId: deviceAlternateId,
         clean: true,
         reconnectPeriod: 2000,
         connectTimeout: 2000,
-        cert: fs.readFileSync(certificateFile),
-        key: fs.readFileSync(certificateFile),
-        passphrase: fs.readFileSync(passphraseFile).toString(),
+        //cert: fs.readFileSync(certificateFile),
+        //key: fs.readFileSync(certificateFile),
+        //passphrase: fs.readFileSync(passphraseFile).toString(),
         rejectUnauthorized: false
     };
 
     deviceFactors[devicenumber] = Math.random() * devicenumber; // higher device numbers are more off then the low numbers
     devicenumber++;
 
-    mqttClient[device.id] = mqtt.connect(`mqtts://${host}:8883`, options);
+    mqttClient[device.id] = mqtt.connect(`mqtt://${host}:${port}`, options);
 
     mqttClient[device.id].subscribe('ack/' + deviceAlternateId);
     mqttClient[device.id].on('connect', () => console.log("Connection established for " + deviceAlternateId));
