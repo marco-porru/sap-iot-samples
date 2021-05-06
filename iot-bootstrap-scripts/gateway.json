@@ -1,1 +1,6 @@
-{"alternateId": "myAlternateId"}
+{
+  "alternateId": "myAlternateId",
+  "host": "127.0.0.1",
+  "port": 8883,
+  "security": true
+}
