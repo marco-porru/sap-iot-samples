@@ -24,6 +24,7 @@ const client = new LeonardoIoT();
 
 // Read the configuration files
 const devices = readFile('devices.json');
+const gatewayAlternateId = readFile('gateway.json').alternateId;
 const model = readFile('model.json');
 
 /**
@@ -58,7 +59,7 @@ async function main() {
     const packageName = `${tenantInfo.value[0].package}.`+ model.package;
 
     sensorTypeId = await findSensorTypeId(model.package + ':'+model.types[0].id);
-    gatewayId = await findCloudGatewayMQTT();
+    gatewayId = await findGateway();
 
     const rootObjectGroup = await client.getRootObjectGroup();
     const thingPayload = {
@@ -154,8 +155,8 @@ async function findSensorTypeId(typeName) {
  * @return {string}  the ID of the gateway used by SAP IoT Services
  * @throws {Error} Raises an exception when SAP IoT Service returns an error.
  */
-async function findCloudGatewayMQTT() {
-  const gurl = client.navigator.getDestination('iot-device-connectivity') + '/api/v1/gateways?filter=alternateId eq \'GATEWAY_CLOUD_MQTT\'';
+async function findGateway() {
+  const gurl = client.navigator.getDestination('iot-device-connectivity') + '/api/v1/gateways?filter=alternateId eq \'' + gatewayAlternateId + '\'';
   const gateways = await client.request({url:gurl, method:'GET', headers:{}, body:{}});
   //console.log(gateways);
 
