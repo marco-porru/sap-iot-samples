@@ -86,28 +86,36 @@ function sendDataViaMQTT() {
 function connectToMQTT() {
   let host = gateway.host;
   let port = gateway.port;
+  let certificatesEnabled = gateway.security;
   //console.log(host);
   let devicenumber = 0;
   for (let device of devices) {
     let deviceAlternateId = device.id;
-    //let certificateFile = 'certificates/' + deviceAlternateId + '-device_certificate.pem';
-    //let passphraseFile = 'certificates/' + deviceAlternateId + '-device_passphrase.txt';
     var options = {
         keepalive: 10,
         clientId: deviceAlternateId,
         clean: true,
         reconnectPeriod: 2000,
         connectTimeout: 2000,
-        //cert: fs.readFileSync(certificateFile),
-        //key: fs.readFileSync(certificateFile),
-        //passphrase: fs.readFileSync(passphraseFile).toString(),
         rejectUnauthorized: false
     };
+    if (security){
+        let certificateFile = 'certificates/' + deviceAlternateId + '-device_certificate.pem';
+        let passphraseFile = 'certificates/' + deviceAlternateId + '-device_passphrase.txt';
+        options['cert'] = fs.readFileSync(certificateFile);
+        options['key'] = fs.readFileSync(certificateFile);
+        options['passphrase']: fs.readFileSync(passphraseFile).toString();
+    }
 
     deviceFactors[devicenumber] = Math.random() * devicenumber; // higher device numbers are more off then the low numbers
     devicenumber++;
 
-    mqttClient[device.id] = mqtt.connect(`mqtt://${host}:${port}`, options);
+    let connectionString = `mqtt://${host}:${port}`;
+    if (security){
+        connectionString = `mqtts://${host}:${port}`;
+    }
+    
+    mqttClient[device.id] = mqtt.connect(connectionString, options);
 
     mqttClient[device.id].subscribe('ack/' + deviceAlternateId);
     mqttClient[device.id].on('connect', () => console.log("Connection established for " + deviceAlternateId));
